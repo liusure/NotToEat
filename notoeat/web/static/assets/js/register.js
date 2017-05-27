@@ -1,0 +1,60 @@
+$(document).ready(function(){
+    $('.i-checks').iCheck({
+        checkboxClass: 'icheckbox_square-green',
+        radioClass: 'iradio_square-green'
+    });
+    $("#username").on("blur",function(){
+        var span = $("#prompt");
+        span.text("").css("display","none");
+        if(this.checkValidity()){
+            $.ajax({
+                url:"/user/checkDuplicateUser",
+                type:"post",
+                data:{
+                    userName:this.value,
+                },
+                success:function(json){
+                    if(json.success){
+                        span.css("color","green");
+                    }else{
+                        span.css("color","red");
+                    }
+                    span.text(json.msg).css("display","inline");
+                }
+            })
+        }
+    })
+    $("#password").on("blur",function(){
+        $("#password2")[0].pattern=this.value;
+    })
+    $("#password2").on("change",function(){
+        if(this.validity.patternMismatch){
+            this.setCustomValidity("与第一次输入的密码不符")
+        }else{
+            this.setCustomValidity("")
+        }
+    })
+    $("#form").on("submit",function(){
+        var span = $("#prompt");
+        span.text("").css("display","none");
+        if(this.checkValidity()){
+            $.ajax({
+                url:"/user/register",
+                type:"post",
+                data:{
+                    userName:this.username.value,
+                    passWord:this.password.value
+                },
+                success:function(json){
+                    if(json.success){
+                        window.location.href="/notoeat";
+                    }else{
+                        span.css("color","red");
+                        span.text(json.msg).css("display","inline");
+                    }
+                }
+            })
+        }
+        return false;
+    })
+});

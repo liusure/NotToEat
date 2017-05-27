@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:cache="http://www.springframework.org/schema/cache"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/cache
+        http://www.springframework.org/schema/cache/spring-cache-3.1.xsd">
+
+    <context:component-scan base-package="com.notoeat.core.test"/>
+
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations" value="jdbc.properties"></property>
+    </bean>
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+          destroy-method="close">
+        <property name="driverClass" value="${jdbc.driverClassName}"/>
+        <property name="jdbcUrl" value="${jdbc.url}"/>
+        <property name="user" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="maxIdleTime" value="28800"/>
+    </bean>
+    <bean id="sessionFactory"
+          class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="packagesToScan">
+            <list>
+                <value>com.notoeat</value>
+            </list>
+        </property>
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>
+                <!-- 是否在控制台打印sql语句  -->
+                <prop key="hibernate.show_sql">true</prop>
+                <!-- 检查数据库结构 validate | update | create | create-drop -->
+                <prop key="hibernate.hbm2ddl.auto">update</prop>
+                <!-- 在Hibernate系统参数中hibernate.use_outer_join被打开的情况下,该参数用来允许使用outer join来载入此集合的数据。    -->
+                <prop key="hibernate.use_outer_join">true</prop>
+                <!-- 默认打开，启用cglib反射优化。cglib是用来在Hibernate中动态生成PO字节码的，打开优化可以加快字节码构造的速度    -->
+                <prop key="hibernate.cglib.use_reflection_optimizer">true</prop>
+                <!-- 输出格式化后的sql,更方便查看  -->
+                <prop key="hibernate.format_sql">true</prop>
+                <!-- “useUnicode”和“characterEncoding”决定了它是否在客户端和服务器端传输过程中进行Encode，以及如何进行Encode    -->
+                <prop key="hibernate.connection.useUnicode">true</prop>
+                <!-- 允许查询缓存, 个别查询仍然需要被设置为可缓存的 -->
+                <prop key="hibernate.cache.use_query_cache">false</prop>
+                <prop key="hibernate.default_batch_fetch_size">16</prop>
+                <!--连接池的最大活动个数 -->
+                <prop key="hibernate.dbcp.maxActive">100</prop>
+                <!-- 当连接池中的连接已经被耗尽的时候，DBCP将怎样处理(0 = 失败,1 = 等待,2  =  增长)    -->
+                <prop key="hibernate.dbcp.whenExhaustedAction">2</prop>
+                <!-- 最大等待时间 -->
+                <prop key="hibernate.dbcp.maxWait">1200</prop>
+                <!--没有人用连接的时候，最大闲置的连接个数-->
+                <prop key="hibernate.dbcp.maxIdle">10</prop>
+                <!-- 以下是对prepared statement的处理，同上。  -->
+                <prop key="hibernate.dbcp.ps.maxActive">100</prop>
+                <prop key="hibernate.dbcp.ps.whenExhaustedAction">1</prop>
+                <prop key="hibernate.dbcp.ps.maxWait">1200</prop>
+                <prop key="hibernate.dbcp.ps.maxIdle">10</prop>
+            </props>
+        </property>
+    </bean>
+
+    <cache:annotation-driven cache-manager="cacheManager" />
+
+    <bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager">
+        <property name="cacheManager" ref="ehcache"></property>
+    </bean>
+
+    <bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+        <property name="configLocation" value="./ehcache-setting.xml"></property>
+    </bean>
+
+    <!-- 配置Hibernate事务管理器 -->
+    <bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+
+    <!-- 配置事务异常封装 -->
+    <bean id="persistenceExceptionTranslationPostProcessor"
+          class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor"/>
+    <!--  声明式容器事务管理 ,transaction-manager指定事务管理器为transactionManager -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="save*" propagation="REQUIRED"/>
+            <tx:method name="get*" propagation="REQUIRED"/>
+            <tx:method name="*" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />
+</beans>
