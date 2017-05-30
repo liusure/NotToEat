@@ -44,7 +44,7 @@ const routes = [{
     component:video_page
 }]
 const router = new VueRouter({
-    base:"/notoeat/",
+    base:"/index/",
     routes,
     linkActiveClass: 'am-active ',
 })

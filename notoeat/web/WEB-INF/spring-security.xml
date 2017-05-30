@@ -8,7 +8,7 @@
         http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans-4.2.xsd">
     <debug/>
-    <http security="none" pattern="/"/>
+    <http security="none" pattern="/login"/>
     <http security="none" pattern="/admin"/>
     <http security="none" pattern="/*/register"/>
     <http security="none" pattern="/user/checkDuplicateUser"/>
@@ -20,12 +20,10 @@
 <!--        <session-management invalid-session-url="/">
             <concurrency-control max-sessions="1" error-if-maximum-exceeded="true"/>
         </session-management>-->
-        <remember-me authentication-success-handler-ref="authenticationSuccessHandlerImpl"
-                     user-service-ref="userService"/>
+        <remember-me key="notoeat" authentication-success-handler-ref="authenticationSuccessHandlerImpl" data-source-ref="dataSource"  user-service-ref="userService"/>
         <csrf disabled="true"/>
-        <form-login login-page="/" authentication-failure-handler-ref="authenticationFailureHandlerImpl"
-                    authentication-success-handler-ref="authenticationSuccessHandlerImpl"/>
-        <logout logout-success-url="/" invalidate-session="true" delete-cookies="JSESSIONID"/>
+        <form-login login-processing-url="/loginAction" login-page="/login" authentication-failure-handler-ref="authenticationFailureHandlerImpl" authentication-success-handler-ref="authenticationSuccessHandlerImpl"/>
+        <logout logout-success-url="/login" invalidate-session="true" delete-cookies="JSESSIONID"/>
     </http>
 
     <authentication-manager id="authenticationManager">

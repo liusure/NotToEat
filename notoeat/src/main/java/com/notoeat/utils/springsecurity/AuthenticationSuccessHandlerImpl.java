@@ -19,19 +19,15 @@ import java.io.OutputStreamWriter;
  * Created by l on 2017/4/22.
  */
 public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHandler {
-
+    private static final String TYPE_AJAX = "XMLHttpRequest";
     @Resource
     private ConfigService<ConfigModel,Integer> configService;
     @Override
     public void onAuthenticationSuccess(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) throws IOException, ServletException {
         // 认证成功后，获取用户信息并添加到session中
-        JsonResult jsonResult = new JsonResult();
-        OutputStreamWriter out = null;
         try {
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             httpServletRequest.getSession().setAttribute("user", userDetails);
-            jsonResult.setSuccess();
-            jsonResult.setMsg("/index");
             ConfigModel configModel = configService.getConfigByName("visitorNum");
             Integer visitorNum = null;
             try {
@@ -41,15 +37,21 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
             }
             configModel.setValue((visitorNum+1)+"");
             configService.saveOrUpdate(configModel);
-            out = new OutputStreamWriter(httpServletResponse.getOutputStream(),"UTF-8");
-            out.write(JSON.toJSONString(jsonResult));
-            out.flush();
+            String requestType = httpServletRequest.getHeader("X-Requested-With");
+            if(TYPE_AJAX.equals(requestType)){
+                try ( OutputStreamWriter out = new OutputStreamWriter(httpServletResponse.getOutputStream(),"UTF-8")){
+                    JsonResult jsonResult = new JsonResult();
+                    jsonResult.setSuccess();
+                    jsonResult.setResult("/index");
+                    jsonResult.setMsg("登陆成功");
+                    out.write(JSON.toJSONString(jsonResult));
+                    out.flush();
+                }
+            }else {
+                httpServletResponse.sendRedirect(httpServletRequest.getContextPath()+"/index");
+            }
         } catch (Exception e1) {
             e1.printStackTrace();
-        } finally {
-            if (out!=null){
-                out.close();
-            }
         }
     }
 }

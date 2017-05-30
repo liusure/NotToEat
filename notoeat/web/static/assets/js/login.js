@@ -1,17 +1,15 @@
 $(function () {
     $("#form").on("submit", function () {
         if (this.checkValidity()) {
+            var data = $(this).serialize();
             $.ajax({
-                url: "/login",
+                url: "/loginAction",
                 type: "post",
                 dataType: "json",
-                data: {
-                    username: $("#username").val(),
-                    password: $("#password").val()
-                },
+                data: data,
                 success: function (json) {
                     if (json.success) {
-                        window.location.href = "/notoeat";
+                        window.location.href = json.result;
                     }else{
                         $("#prompt").text(json.msg).css("color","red");
                     }

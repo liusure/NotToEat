@@ -4949,7 +4949,7 @@ const routes = [{
     component: __WEBPACK_IMPORTED_MODULE_12__component_video_page_vue___default.a
 }];
 const router = new __WEBPACK_IMPORTED_MODULE_2_vue_router__["a" /* default */]({
-    base: "/notoeat/",
+    base: "/index/",
     routes,
     linkActiveClass: 'am-active '
 });
@@ -40394,6 +40394,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             uploadMultiple: false,
             parallelUploads: 100,
             maxFiles: 100,
+            acceptedFiles: "image/*,video/mp4,video/flv",
             init: function () {
                 this.on("success", function () {
                     __WEBPACK_IMPORTED_MODULE_1_main__["bus"].$emit("fileChange");
@@ -40514,6 +40515,9 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
 
 
 /* harmony default export */ __webpack_exports__["default"] = ({
@@ -40562,39 +40566,66 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
 
 
 var flvPlayer;
 var videoElement;
+var playBtn;
+var fullScreen;
+var videoProgress;
+var videoProgressbar;
+var progressInter;
 /* harmony default export */ __webpack_exports__["default"] = ({
     props: ["video"],
+    data: function () {
+        return {
+            player: {
+                volume: .5
+            }
+        };
+    },
     methods: {
         init: function (config) {
             if (__WEBPACK_IMPORTED_MODULE_0_flv_js___default.a.isSupported()) {
                 flvPlayer = __WEBPACK_IMPORTED_MODULE_0_flv_js___default.a.createPlayer(config);
                 flvPlayer.attachMediaElement(videoElement);
                 flvPlayer.load();
+                flvPlayer.volume = this.player.volume;
             }
+            videoElement.addEventListener("click", () => {
+                this.play();
+            });
         },
-        play: function (e) {
-            var btn = e.target;
-            if (btn.classList.contains("playing")) {
-                flvPlayer.pause();
-                btn.classList.remove("playing");
-                btn.classList.remove("am-icon-pause");
-                btn.classList.add("pause");
-                btn.classList.add("am-icon-play");
-            } else if (btn.classList.contains("pause")) {
-                flvPlayer.play();
-                btn.classList.remove("pause");
-                btn.classList.remove("am-icon-play");
-                btn.classList.add("playing");
-                btn.classList.add("am-icon-pause");
-            }
+        play: function () {
+            var isPlaying = changePlayBtnStatus(playBtn);
+            isPlaying ? flvPlayer.play() : flvPlayer.pause();
+        },
+        setVolume: function (n) {
+            n /= 10;
+            flvPlayer.volume = n;
+            this.player.volume = n;
+        },
+        setProgress: function (e) {
+            var p = e.offsetX / e.currentTarget.offsetWidth;
+            flvPlayer.currentTime = flvPlayer.duration * p;
+            videoProgressbar.style.width = p * 100 + "%";
+        },
+        fullScreen: function () {
+            changeFullScreen(videoElement);
         }
     },
     mounted: function () {
         videoElement = document.getElementById('videoElement');
+        playBtn = document.querySelector(".video-control.video-play-btn");
+        fullScreen = document.querySelector(".video-control.video-fullscreen-btn");
+        videoProgress = document.querySelector(".video-control.video-play-progress");
+        videoProgressbar = document.querySelector(".video-control.video-play-progress .video-play-progress-bar");
         $(".player-view").on("mouseenter", function () {
             var bar = $(this).find(".video-controller-bar").addClass("active");
             $(this).one("mouseleave", () => {
@@ -40611,8 +40642,84 @@ var videoElement;
                 });
             }
         }
+    },
+    computed: {
+        volume: function () {
+            return this.player.volume;
+        }
     }
 });
+function changePlayBtnStatus(btn) {
+    if (btn.classList.contains("playing")) {
+        btn.classList.remove("playing");
+        btn.classList.remove("am-icon-pause");
+        btn.classList.add("pause");
+        btn.classList.add("am-icon-play");
+        clearInterval(progressInter);
+        return false;
+    } else if (btn.classList.contains("pause")) {
+        btn.classList.remove("pause");
+        btn.classList.remove("am-icon-play");
+        btn.classList.add("playing");
+        btn.classList.add("am-icon-pause");
+        progressInter = setInterval(setProgress, 100);
+        return true;
+    }
+}
+function setProgress() {
+    var progressValue = flvPlayer.currentTime / flvPlayer.duration * 100;
+    videoProgressbar.style.width = progressValue + "%";
+}
+function changeFullScreen(el) {
+    if (!videoElement.isFullScreen) {
+        if (el.requestFullscreen) {
+            el.requestFullscreen();
+        } else if (el.mozRequestFullScreen) {
+            el.mozRequestFullScreen();
+        } else if (el.msRequestFullscreen) {
+            el.msRequestFullscreen();
+        } else if (el.oRequestFullscreen) {
+            el.oRequestFullscreen();
+        } else if (el.webkitRequestFullscreen) {
+            el.webkitRequestFullScreen();
+        } else {
+            var docHtml = document.documentElement;
+            var docBody = document.body;
+            var videobox = document.getElementById('videobox');
+            var cssText = 'width:100%;height:100%;overflow:hidden;';
+            docHtml.style.cssText = cssText;
+            docBody.style.cssText = cssText;
+            el.style.cssText = cssText + ';' + 'margin:0px;padding:0px;';
+            document.IsFullScreen = true;
+        }
+        fullScreen.classList.remove("am-icon-arrows-alt");
+        fullScreen.classList.add("am-icon-compress");
+        el.isFullScreen = true;
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.oRequestFullscreen) {
+            document.oCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else {
+            var docHtml = document.documentElement;
+            var docBody = document.body;
+            var videobox = document.getElementById('videobox');
+            docHtml.style.cssText = "";
+            docBody.style.cssText = "";
+            videobox.style.cssText = "";
+            document.IsFullScreen = false;
+        }
+        fullScreen.classList.remove("am-icon-compress");
+        fullScreen.classList.add("am-icon-arrows-alt");
+        el.isFullScreen = false;
+    }
+}
 
 /***/ }),
 /* 159 */
@@ -52338,7 +52445,7 @@ exports = module.exports = __webpack_require__(2)();
 
 
 // module
-exports.push([module.i, ".player-view{position:relative;display:flex}#videoElement{width:100%;height:100%}.video-player .video-controller-bar{position:absolute;bottom:0;opacity:.7;color:#fff;display:none}.video-controller-bar.active{display:flex}.video-fullscreen-btn,.video-play-btn,.video-volume{flex:none;background-color:#000}.video-player .video-controller-bar .video-play-progress{flex:auto}", ""]);
+exports.push([module.i, ".player-view{position:relative;display:flex}#videoElement{width:100%;height:100%}.video-player .video-controller-bar{position:absolute;left:0;bottom:0;opacity:.7;color:#fff;display:none;height:64px;width:100%;flex-wrap:nowrap;justify-content:space-between;align-items:stretch;z-index:2147483648;background:linear-gradient(top,hsla(0,0%,100%,0),#000 70%);background:-webkit-linear-gradient(top,hsla(0,0%,100%,0),#000 70%)}.video-controller-bar.active{display:flex}.video-controller-bar .video-control{border:none;background-color:transparent;cursor:pointer;vertical-align:middle;padding:6px;margin:10px}.video-control.video-volume{min-width:100px;width:10%;display:flex;flex-wrap:nowrap}.video-control.video-volume .volume-cube{display:inline-block;height:100%;width:auto;flex-grow:1;padding:2px}.video-control.video-volume .volume-cube .volume-cube-color{display:block;width:100%;height:100%;background-color:#3d3d3d}.video-control.video-volume .volume-cube.active .volume-cube-color{background-color:#0e9aef}.video-control.video-play-progress{flex-grow:1}.video-play-progress-bar{height:100%;background-color:#0e9aef}video::-webkit-media-controls{display:none!important}", ""]);
 
 // exports
 
@@ -64874,11 +64981,15 @@ module.exports = Component.exports
 /***/ (function(module, exports) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
-  return _c('video-player', {
+  return _c('div', {
+    staticClass: "am-g"
+  }, [_c('div', {
+    staticClass: "am-u-lg-12"
+  }, [_c('video-player', {
     attrs: {
       "video": _vm.video
     }
-  })
+  })], 1)])
 },staticRenderFns: []}
 
 /***/ }),
@@ -65011,19 +65122,48 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     }
   }), _vm._v(" "), _c('div', {
     staticClass: "video-controller-bar"
-  }, [_c('button', {
-    staticClass: "video-control video-play-btn pause am-icon-play",
+  }, [_c('div', {
+    staticClass: "video-control video-play-btn pause am-icon-play am-icon-md am-icon-btn-md",
     on: {
       "click": function($event) {
-        _vm.play($event)
+        _vm.play()
       }
     }
   }), _vm._v(" "), _c('div', {
     staticClass: "video-control video-volume"
-  }), _vm._v(" "), _c('div', {
-    staticClass: "video-control video-play-progress"
-  }), _vm._v(" "), _c('button', {
-    staticClass: "video-control video-fullscreen-btn"
+  }, _vm._l((10), function(n) {
+    return _c('span', {
+      staticClass: "volume-cube",
+      class: {
+        'active': n / 10 <= _vm.volume
+      },
+      on: {
+        "click": function($event) {
+          _vm.setVolume(n)
+        }
+      }
+    }, [_c('span', {
+      staticClass: "volume-cube-color"
+    })])
+  })), _vm._v(" "), _c('div', {
+    staticClass: "video-control video-play-progress",
+    on: {
+      "click": function($event) {
+        _vm.setProgress($event)
+      }
+    }
+  }, [_c('div', {
+    staticClass: "video-play-progress-bar",
+    staticStyle: {
+      "width": "0"
+    }
+  })]), _vm._v(" "), _c('div', {
+    staticClass: "video-control video-fullscreen-btn am-icon-arrows-alt am-icon-md am-icon-btn-md",
+    on: {
+      "click": function($event) {
+        _vm.fullScreen()
+      }
+    }
   })])])])
 },staticRenderFns: []}
 
@@ -65619,34 +65759,24 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     attrs: {
       "to": "/user_center"
     }
-  }, [_c('a', {
-    attrs: {
-      "href": "javascript:void(0)"
-    }
   }, [_c('img', {
     attrs: {
       "src": _vm.user.facePath || '../static/assets/images/notoeat/default_face.png',
       "width": "40",
       "height": "40"
     }
-  }), _vm._v(_vm._s(_vm.user.alias))])])], 1), _vm._v(" "), _c('li', [_c('router-link', {
+  }), _vm._v(_vm._s(_vm.user.alias))])], 1), _vm._v(" "), _c('li', [_c('router-link', {
     attrs: {
-      "to": ""
+      "to": "/message"
     }
-  }, [_c('a', {
+  }, [_vm._v("消息")])], 1), _vm._v(" "), _vm._m(0)])
+},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
+  return _c('li', [_c('a', {
     attrs: {
-      "href": "javascript:void(0)"
+      "href": "/logout"
     }
-  }, [_vm._v("消息")])])], 1), _vm._v(" "), _c('li', [_c('router-link', {
-    attrs: {
-      "to": ""
-    }
-  }, [_c('a', {
-    attrs: {
-      "href": "javascript:void(0)"
-    }
-  }, [_vm._v("登出")])])], 1)])
-},staticRenderFns: []}
+  }, [_vm._v("登出")])])
+}]}
 
 /***/ }),
 /* 216 */

@@ -17,9 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import sun.misc.BASE64Decoder;
 
 import javax.annotation.Resource;
@@ -66,7 +64,7 @@ public class UserController {
         }
         return jsonResult;
     }
-    @RequestMapping("/register")
+    @RequestMapping(value = "register",method = RequestMethod.POST)
     @ResponseBody
     public JsonResult<UserModel> register(UserModel user, HttpServletRequest httpServletRequest){
         JsonResult<UserModel> jsonResult = new JsonResult<UserModel>();
@@ -98,9 +96,9 @@ public class UserController {
         }
         return jsonResult;
     }
-    @RequestMapping("/getUser")
+    @RequestMapping(value = "/{id}",method = RequestMethod.GET)
     @ResponseBody
-    public JsonResult<UserModel> getUser(){
+    public JsonResult<UserModel> getUser(@PathVariable("id") Integer id){
         JsonResult jsonResult = new JsonResult();
         try {
             UserModel userModel = (UserModel) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

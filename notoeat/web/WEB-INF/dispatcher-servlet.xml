@@ -18,10 +18,10 @@
 
     <!--配置静态资源由默认servlet拦截-->
     <mvc:default-servlet-handler/>
-
-    <mvc:view-controller path="/" view-name="notoeat/login"/>
+    <mvc:redirect-view-controller path="/" redirect-url="/index"/>
+    <mvc:view-controller path="/login" view-name="notoeat/login"/>
     <mvc:view-controller path="/notoeat/register" view-name="notoeat/register"/>
-    <mvc:view-controller path="/notoeat" view-name="../../app"/>
+    <mvc:view-controller path="/index" view-name="../../app"/>
     <mvc:view-controller path="/admin" view-name="admin/login"/>
     <mvc:view-controller path="/admin/register" view-name="admin/register"/>
     <mvc:view-controller path="/admin/index" view-name="admin/index"/>

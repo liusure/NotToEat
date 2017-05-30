@@ -25,6 +25,7 @@
                 uploadMultiple: false,
                 parallelUploads: 100,
                 maxFiles: 100,
+                acceptedFiles:"image/*,video/mp4,video/flv",
                 init:function () {
                     this.on("success",function () {
                         bus.$emit("fileChange");

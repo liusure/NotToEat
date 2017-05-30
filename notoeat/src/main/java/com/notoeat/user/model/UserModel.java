@@ -40,7 +40,7 @@ public class UserModel extends Model implements UserDetails {
         this.id = id;
     }
 
-    @Column(unique = true)
+    @Column(unique = true,length = 64)
     public String getUserName() {
         return userName;
     }

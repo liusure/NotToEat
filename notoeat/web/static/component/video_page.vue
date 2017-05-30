@@ -1,6 +1,9 @@
 <template>
-    <video-player :video="video"></video-player>
-    <button @click="play">start</button>
+    <div class="am-g">
+        <div class="am-u-lg-12">
+            <video-player :video="video"></video-player>
+        </div>
+    </div>
 </template>
 <script>
     import videoPlayer from "./video_player.vue";
